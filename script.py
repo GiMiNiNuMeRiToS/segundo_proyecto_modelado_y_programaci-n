@@ -7,16 +7,6 @@ def extraer_mensaje_archivo(ruta):
         mensaje = archivo.read()
     return f'"{mensaje}"'
 
-def calcularCifrado(ancho, alto, longitudtex):
-    numeropixel=ancho*alto
-    espaciodisponiblebits=numeropixel*4
-    espaciobytes=espaciodisponiblebits//8
-    if longitudtex>espaciobytes:
-        print("El mensaje es muy largo para ser ocultado en la imagen")
-        return False
-    else:
-        return True
-
 # Función para ocultar un mensaje usando LSB.
 def ocultar_mensaje(imagen, mensaje, nombre_archivo_salida):
     img = Image.open(imagen)
@@ -29,21 +19,19 @@ def ocultar_mensaje(imagen, mensaje, nombre_archivo_salida):
     # Añadimos el byte terminador 'x00' (00000000 en binario)
     mensaje_completo = longitud_binario + mensaje_binario + '00000000'
     
-    # Convertir la imagen a modo RGB si tiene transparencia  
-    
-    img=img.convert("RGBA")
-    
+    # Convertir la imagen a modo RGB si tiene transparencia
+    if img.mode in ('RGBA', 'LA'):
+        img = img.convert('RGB')
     
     imagen_nueva = img.copy()  # Copiar la imagen para modificarla
     indice = 0
     ancho, alto = img.width, img.height
-
     
     # Ocultar el mensaje
     for x in range(ancho):
         for y in range(alto):
             pix = list(imagen_nueva.getpixel((x, y)))  # Obtener el valor RGB de cada píxel
-            for canal in range(4):  # Modificar solo los 3 primeros canales (R, G, B)
+            for canal in range(3):  # Modificar solo los 3 primeros canales (R, G, B)
                 if indice < len(mensaje_completo):
                     valor_actual = pix[canal]
                     valor_mascarado = (valor_actual >> 1) << 1  # Poner a 0 el bit menos significativo
@@ -132,6 +120,3 @@ if __name__ == "__main__":
         print("Ocultar mensaje: python script.py -h archivo_mensaje ruta_imagen nombre_archivo_salida")
         print("Extraer mensaje: python script.py -u ruta_imagen.png nombre_archivo_salida")
         sys.exit(1)
-
-
-        #Para codificar asegurarse de poder leer las imagenes en blanco y negro
