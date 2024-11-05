@@ -16,29 +16,31 @@ def calcularCifrado(ancho, alto, longitudtex):
     else:
         return True
 
-'''
 def ocultar_mensaje(imagen,mensaje,nombre_archivo_salida):
-    img = Image.open(imagen)
     
+    try:
+        imag = Image.open(imagen, formats=["PNG", "JPEG"])
+    except TypeError as e:
+        print(e)
+        print("Formato no valido")
+
     # Convertimos el mensaje en binario y añadimos la longitud del mensaje
     mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
     longitud_mensaje = len(mensaje_binario) // 8  # Convertimos a bytes
-    # Agregamos los primeros dos bytes que contienen la longitud del mensaje
-    longitud_binario = format(longitud_mensaje, '016b')
-    # Añadimos el byte terminador 'x00' (00000000 en binario)
-    mensaje_completo = longitud_binario + mensaje_binario + '00000000'
-    
-    imagen_nueva = img.copy()  # Copiar la imagen para modificarla
-    indice = 0
-    ancho, alto = img.width, img.height
+    ancho, alto = imag.width, imag.height
 
-    if calcularCifrado(ancho, alto, longitud-mensaje):
-        if img.mode in ('RGBA'):
-'''
+    if calcularCifrado(ancho, alto, longitud_mensaje):
+        if imag.format == "PNG":
+            ocultar_mensaje_png(imagen, mensaje, nombre_archivo_salida)
+        elif imag.format == "JPG":
+            ocultar_mensaje_jpg(imagen, mensaje, nombre_archivo_salida)
+    else:
+        print("Tamaño de imagen no valido")
 
 # Función para ocultar un mensaje usando LSB.
-def ocultar_mensaje_transparencia(imagen, mensaje, nombre_archivo_salida):
-    img = Image.open(imagen)
+def ocultar_mensaje_png(imagen, mensaje, nombre_archivo_salida):
+
+    img = Image.open(imagen, formats=["PNG"])
     
     # Convertimos el mensaje en binario y añadimos la longitud del mensaje
     mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
@@ -50,7 +52,7 @@ def ocultar_mensaje_transparencia(imagen, mensaje, nombre_archivo_salida):
     
     # Convertir la imagen a modo RGB si tiene transparencia  
     
-    img=img.convert("RGBA")
+    img = img.convert("RGBA")
     
     imagen_nueva = img.copy()  # Copiar la imagen para modificarla
     indice = 0
@@ -60,7 +62,7 @@ def ocultar_mensaje_transparencia(imagen, mensaje, nombre_archivo_salida):
     for x in range(ancho):
         for y in range(alto):
             pix = list(imagen_nueva.getpixel((x, y)))  # Obtener el valor RGB de cada píxel
-            for canal in range(4):  # Modificar solo los 3 primeros canales (R, G, B)
+            for canal in range(3):  # Modificar solo los 3 primeros canales (R, G, B)
                 if indice < len(mensaje_completo):
                     valor_actual = pix[canal]
                     valor_mascarado = (valor_actual >> 1) << 1  # Poner a 0 el bit menos significativo
@@ -73,12 +75,12 @@ def ocultar_mensaje_transparencia(imagen, mensaje, nombre_archivo_salida):
                 break
         if indice >= len(mensaje_completo):
             break
-    imagen_nueva.save(f"{nombre_archivo_salida}.png")  # Guardar la imagen con el mensaje oculto
+    imagen_nueva.save(f"{nombre_archivo_salida}.png", "PNG")  # Guardar la imagen con el mensaje oculto
 
-'''
-def ocultar_mensaje_sin_transparencia(imagen, mensaje, nombre_archivo_salida):
-    img = Image.open(imagen)
+def ocultar_mensaje_jpg(imagen, mensaje, nombre_archivo_salida):
     
+    img = Image.open(imagen, formats=["JPEG"])
+
     # Convertimos el mensaje en binario y añadimos la longitud del mensaje
     mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
     longitud_mensaje = len(mensaje_binario) // 8  # Convertimos a bytes
@@ -112,8 +114,8 @@ def ocultar_mensaje_sin_transparencia(imagen, mensaje, nombre_archivo_salida):
                 break
         if indice >= len(mensaje_completo):
             break
-    imagen_nueva.save(f"{nombre_archivo_salida}.png")  # Guardar la imagen con el mensaje oculto
-'''
+    imagen_nueva.save(f"{nombre_archivo_salida}.jpg", "JPG")  # Guardar la imagen con el mensaje oculto
+
 # Función para extraer la longitud del mensaje de los primeros 16 bits
 def extraer_longitud_mensaje(imagen):
     img = Image.open(imagen)
@@ -128,7 +130,7 @@ def extraer_longitud_mensaje(imagen):
     for x in range(img.width):
         for y in range(img.height):
             pix = img.getpixel((x, y))
-            for canal in range(4):  # Solo revisar los canales R, G, B
+            for canal in range(3):  # Solo revisar los canales R, G, B
                 longitud_binario += str(pix[canal] & 1)  # Extraer el bit menos significativo
                 contador += 1
                 if contador == 16:  # Detenerse cuando se tienen los 16 bits de longitud
@@ -137,7 +139,7 @@ def extraer_longitud_mensaje(imagen):
 
 # Función para extraer el mensaje oculto hasta encontrar 'x00'
 def extraer_mensaje(ruta_imagen, nombre_archivo_salida):
-    img = Image.open(ruta_imagen)
+    img = Image.open(ruta_imagen, formats=["PNG"])
     
     # Convertir la imagen a modo RGB si tiene transparencia
     img=img.convert("RGBA")
@@ -150,7 +152,7 @@ def extraer_mensaje(ruta_imagen, nombre_archivo_salida):
     for x in range(img.width):
         for y in range(img.height):
             pix = img.getpixel((x, y))
-            for canal in range(4):
+            for canal in range(3):
                 mensaje_binario += str(pix[canal] & 1)  # Extraer el bit menos significativo
                 contador += 1
                 if contador == (longitud_mensaje * 8) + 16:  # 16 bits para la longitud + el mensaje
@@ -161,13 +163,12 @@ def extraer_mensaje(ruta_imagen, nombre_archivo_salida):
                         archivo.write(mensaje)
                     return mensaje
 
-
 if __name__ == "__main__":
 
     # Ocultar mensaje: python script.py -h archivo_mensaje ruta_imagen nombre_archivo_salida
     if sys.argv[1] == "-h":
         mensaje = extraer_mensaje_archivo(sys.argv[2])
-        ocultar_mensaje_transparencia(sys.argv[3], mensaje, sys.argv[4])
+        ocultar_mensaje(sys.argv[3], mensaje, sys.argv[4])
         print(f"Mensaje ocultado en {sys.argv[4]}.png")
 
     # Extraer mensaje: python script.py -u ruta_imagen nombre_archivo_salida
@@ -185,5 +186,3 @@ if __name__ == "__main__":
         print("Extraer mensaje: python script.py -u ruta_imagen.png nombre_archivo_salida")
         sys.exit(1)
 
-
-        #Para codificar asegurarse de poder leer las imagenes en blanco y negro
