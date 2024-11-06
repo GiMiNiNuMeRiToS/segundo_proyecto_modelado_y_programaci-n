@@ -10,6 +10,8 @@ def extraer_mensaje_archivo(ruta):
 # Función para ocultar un mensaje usando LSB.
 def ocultar_mensaje(imagen, mensaje, nombre_archivo_salida):
     img = Image.open(imagen)
+    img.save("imagen_convertida","png")
+
     
     # Convertimos el mensaje en binario y añadimos la longitud del mensaje
     mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
