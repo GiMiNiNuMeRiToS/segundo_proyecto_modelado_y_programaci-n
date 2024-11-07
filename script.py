@@ -47,7 +47,7 @@ def ocultar_mensaje(imagen, mensaje, nombre_archivo_salida):
         if indice >= len(mensaje_completo):
             break
 
-    imagen_nueva.save(f"{nombre_archivo_salida}.png")  # Guardar la imagen con el mensaje oculto
+    imagen_nueva.save(f"{nombre_archivo_salida}")  # Guardar la imagen con el mensaje oculto
 
 
 # Función para extraer la longitud del mensaje de los primeros 16 bits
