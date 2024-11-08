@@ -251,16 +251,35 @@ def extraer_mensaje_jpeg(imagen, nombre_archivo_salida):
                         archivo.write(mensaje)
                     return mensaje
 
+def longitudDatosdDeEntrada(datoDeEntrada):
+
+    longitud = 0
+
+    for x in datoDeEntrada:
+
+        longitud += 1
+
+    if longitud > 16:
+
+        print(f"Nombre de archivo demasiado largo.")
+
 if __name__ == "__main__":
 
     # Ocultar mensaje: python script.py -h archivo_mensaje ruta_imagen nombre_archivo_salida
     if sys.argv[1] == "-h":
+
+        longitudDatosdDeEntrada(sys.argv[2])
+        longitudDatosdDeEntrada(sys.argv[3])
+        longitudDatosdDeEntrada(sys.argv[4])
         mensaje = extraer_mensaje_archivo(sys.argv[2])
         ocultar_mensaje(sys.argv[3], mensaje, sys.argv[4])
         print(f"Mensaje ocultado en {sys.argv[4]}.png")
 
     # Extraer mensaje: python script.py -u ruta_imagen nombre_archivo_salida
     elif sys.argv[1] == "-u":
+
+        longitudDatosdDeEntrada(sys.argv[2])
+        longitudDatosdDeEntrada(sys.argv[3])
         salida = extraer_mensaje(sys.argv[2], sys.argv[3])
         longitud = extraer_longitud_mensaje(sys.argv[2])
         print(f"Longitud del mensaje: {longitud}")
