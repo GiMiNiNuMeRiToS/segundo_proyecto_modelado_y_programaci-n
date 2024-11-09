@@ -260,8 +260,9 @@ def longitudDatosdDeEntrada(datoDeEntrada):
         longitud += 1
 
     if longitud > 16:
-
-        print(f"Nombre de archivo demasiado largo.")
+        print("Mensaje demasiado largo")
+        return True
+    return False
 
 if __name__ == "__main__":
 
