@@ -38,98 +38,36 @@ def ocultar_mensaje(imagen,mensaje,nombre_archivo_salida):
     # Convertimos el mensaje en binario y añadimos la longitud del mensaje
     mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
     longitud_mensaje = len(mensaje_binario) // 8  # Convertimos a bytes
+    longitud_binario = format(longitud_mensaje, '016b')
+    mensaje_completo = longitud_binario + mensaje_binario + '00000000'
     ancho, alto = imag.width, imag.height
 
     if calcularCifrado(ancho, alto, longitud_mensaje) == True:
 
-        print("Tamaño de imagen valido")
+        imagen_nueva = img.copy()  # Copiar la imagen para modificarla
+        indice = 0
 
-        imag = asignacionDeCanalesRGB(imag)
-
-        if imag.format == "PNG":
-            
-            ocultar_mensaje_png(imagen, mensaje, nombre_archivo_salida)
-        
-        elif imag.format == "JPEG":
-            
-            ocultar_mensaje_jpeg(imagen, mensaje, nombre_archivo_salida)
+        for x in range(ancho):
+            for y in range(alto):
+                pix = list(imagen_nueva.getpixel((x, y)))  # Obtener el valor RGB de cada píxel
+                for canal in range(3):  # Modificar solo los 3 primeros canales (R, G, B)
+                    if indice < len(mensaje_completo):
+                        valor_actual = pix[canal]
+                        valor_mascarado = (valor_actual >> 1) << 1  # Poner a 0 el bit menos significativo
+                        bit_mensaje = int(mensaje_completo[indice])  # Obtener el bit del mensaje
+                        nuevo_valor = valor_mascarado | bit_mensaje  # Insertar el bit
+                        pix[canal] = nuevo_valor  # Actualizar el valor del canal
+                        indice += 1
+                imagen_nueva.putpixel((x, y), tuple(pix))  # Actualizar el píxel con los nuevos valores
+                if indice >= len(mensaje_completo):  # Terminar cuando el mensaje esté completamente oculto
+                    break
+            if indice >= len(mensaje_completo):
+                break
+        imagen_nueva.save(f"{nombre_archivo_salida}.png", "PNG")  # Guardar la imagen con el mensaje oculto
     
     else:
         
         print("Tamaño de imagen no valido")
-
-# Función para ocultar un mensaje usando LSB.
-def ocultar_mensaje_png(imagen, mensaje, nombre_archivo_salida):
-
-    img = Image.open(imagen, formats=["PNG"])
-    
-    # Convertimos el mensaje en binario y añadimos la longitud del mensaje
-    mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
-    longitud_mensaje = len(mensaje_binario) // 8  # Convertimos a bytes
-    # Agregamos los primeros dos bytes que contienen la longitud del mensaje
-    longitud_binario = format(longitud_mensaje, '016b')
-    # Añadimos el byte terminador 'x00' (00000000 en binario)
-    mensaje_completo = longitud_binario + mensaje_binario + '00000000'
-    
-    # Convertir la imagen a modo RGB si tiene transparencia
-    
-    imagen_nueva = img.copy()  # Copiar la imagen para modificarla
-    indice = 0
-    ancho, alto = img.width, img.height
-
-    # Ocultar el mensaje
-    for x in range(ancho):
-        for y in range(alto):
-            pix = list(imagen_nueva.getpixel((x, y)))  # Obtener el valor RGB de cada píxel
-            for canal in range(3):  # Modificar solo los 3 primeros canales (R, G, B)
-                if indice < len(mensaje_completo):
-                    valor_actual = pix[canal]
-                    valor_mascarado = (valor_actual >> 1) << 1  # Poner a 0 el bit menos significativo
-                    bit_mensaje = int(mensaje_completo[indice])  # Obtener el bit del mensaje
-                    nuevo_valor = valor_mascarado | bit_mensaje  # Insertar el bit
-                    pix[canal] = nuevo_valor  # Actualizar el valor del canal
-                    indice += 1
-            imagen_nueva.putpixel((x, y), tuple(pix))  # Actualizar el píxel con los nuevos valores
-            if indice >= len(mensaje_completo):  # Terminar cuando el mensaje esté completamente oculto
-                break
-        if indice >= len(mensaje_completo):
-            break
-    imagen_nueva.save(f"{nombre_archivo_salida}.png", "PNG")  # Guardar la imagen con el mensaje oculto
-
-def ocultar_mensaje_jpeg(imagen, mensaje, nombre_archivo_salida):
-    
-    img = Image.open(imagen, formats=["JPEG"])
-
-    # Convertimos el mensaje en binario y añadimos la longitud del mensaje
-    mensaje_binario = ''.join([format(ord(i), '08b') for i in mensaje])
-    longitud_mensaje = len(mensaje_binario) // 8  # Convertimos a bytes
-    # Agregamos los primeros dos bytes que contienen la longitud del mensaje
-    longitud_binario = format(longitud_mensaje, '016b')
-    # Añadimos el byte terminador 'x00' (00000000 en binario)
-    mensaje_completo = longitud_binario + mensaje_binario + '00000000'
-    
-    imagen_nueva = img.copy()  # Copiar la imagen para modificarla
-    indice = 0
-    ancho, alto = img.width, img.height
-
-    # Ocultar el mensaje
-    for x in range(ancho):
-        for y in range(alto):
-            pix = list(imagen_nueva.getpixel((x, y)))  # Obtener el valor RGB de cada píxel
-            for canal in range(3):  # Modificar solo los 3 primeros canales (R, G, B)
-                if indice < len(mensaje_completo):
-                    valor_actual = pix[canal]
-                    valor_mascarado = (valor_actual >> 1) << 1  # Poner a 0 el bit menos significativo
-                    bit_mensaje = int(mensaje_completo[indice])  # Obtener el bit del mensaje
-                    nuevo_valor = valor_mascarado | bit_mensaje  # Insertar el bit
-                    pix[canal] = nuevo_valor  # Actualizar el valor del canal
-                    indice += 1
-            imagen_nueva.putpixel((x, y), tuple(pix))  # Actualizar el píxel con los nuevos valores
-            if indice >= len(mensaje_completo):  # Terminar cuando el mensaje esté completamente oculto
-                break
-        if indice >= len(mensaje_completo):
-            break
-    imagen_nueva.save(f"{nombre_archivo_salida}.jpg", "JPEG")  # Guardar la imagen con el mensaje oculto
 
 # Función para extraer la longitud del mensaje de los primeros 16 bits
 def extraer_longitud_mensaje(imagen):
@@ -169,59 +107,6 @@ def extraer_mensaje(ruta_imagen, nombre_archivo_salida):
     except UnidentifiedImageError as e:
         
         print("El formato de archivo no es valido:", e)
-        return
-
-    if imag.format == "PNG":
-            
-        extraer_mensaje_png(ruta_imagen, nombre_archivo_salida)
-        
-    elif imag.format == "JPEG":
-            
-        extraer_mensaje_jpeg(ruta_imagen, nombre_archivo_salida)
-
-# Función para extraer el mensaje oculto hasta encontrar 'x00' para png
-def extraer_mensaje_png(imagen, nombre_archivo_salida):
-    
-    try:
-        
-        img = Image.open(imagen, formats=["PNG"])
-    
-    except UnidentifiedImageError as e:
-        
-        print("El archivo no es una imagen JPEG válida.", e)
-        return
-
-    img = asignacionDeCanalesRGB(img)
-    
-    mensaje_binario = ""
-    longitud_mensaje = extraer_longitud_mensaje(imagen)
-    contador = 0
-
-    # Extraer el mensaje de los bits menos significativos de cada píxel
-    for x in range(img.width):
-        for y in range(img.height):
-            pix = img.getpixel((x, y))
-            for canal in range(3):
-                mensaje_binario += str(pix[canal] & 1)  # Extraer el bit menos significativo
-                contador += 1
-                if contador == (longitud_mensaje * 8) + 16:  # 16 bits para la longitud + el mensaje
-                    mensaje_binario = mensaje_binario[16:16 + longitud_mensaje * 8]  # Saltar los bits de longitud
-                    #return ''.join([chr(int(mensaje_binario[i:i + 8], 2)) for i in range(0, len(mensaje_binario), 8)])  # Convertir a texto
-                    mensaje = ''.join([chr(int(mensaje_binario[i:i + 8], 2)) for i in range(0, len(mensaje_binario), 8)])  # Convertir a texto
-                    with open(f"{nombre_archivo_salida}.txt", "w") as archivo:
-                        archivo.write(mensaje)
-                    return mensaje
-
-# Función para extraer el mensaje oculto hasta encontrar 'x00' para jpeg
-def extraer_mensaje_jpeg(imagen, nombre_archivo_salida):
-    
-    try:
-        
-        img = Image.open(imagen, formats=["JPEG"])
-    
-    except UnidentifiedImageError as e:
-        
-        print("El archivo no es una imagen JPEG válida.", e)
         return
 
     img = asignacionDeCanalesRGB(img)
