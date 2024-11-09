@@ -78,8 +78,7 @@ def extraer_longitud_mensaje(imagen):
     
     except UnidentifiedImageError as e:
         
-        print("El formato de archivo no es valido:", e)
-        return
+        raise Exception("Formato de archivo no valido:", e)
     
     # Convertir la imagen a modo RGB si tiene transparencia
     img = asignacionDeCanalesRGB(img)
@@ -106,8 +105,7 @@ def extraer_mensaje(ruta_imagen, nombre_archivo_salida):
     
     except UnidentifiedImageError as e:
         
-        print("El formato de archivo no es valido:", e)
-        return
+        raise Exception("Formato de archivo no valido:", e)
 
     img = asignacionDeCanalesRGB(img)
     
