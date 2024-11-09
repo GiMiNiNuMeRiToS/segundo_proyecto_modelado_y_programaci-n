@@ -54,6 +54,8 @@ class App(tk.Tk):
         ruta_imagen=self.ruta_imagen.get()
         ruta_archivo=self.ruta_archivo.get()
         nombre_salida=self.nombre_salida.get()
+        if longitudDatosdDeEntrada(nombre_salida):
+            messagebox.showerror("Error", "Mensaje demasiado largo")
         if ruta_imagen and ruta_archivo and nombre_salida:
             try:
                 mensaje=extraer_mensaje_archivo(ruta_archivo)
@@ -82,6 +84,8 @@ class App(tk.Tk):
     def extraer_mensaje(self):
         ruta_imagen=self.ruta_imagen.get()
         nombre_salida=self.nombre_salida.get()
+        if longitudDatosdDeEntrada(nombre_salida):
+            messagebox.showerror("Error", "Mensaje demasiado largo")
         if ruta_imagen and nombre_salida:
             try:
                 salida=extraer_mensaje(ruta_imagen,nombre_salida)
